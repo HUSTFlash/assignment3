@@ -1,12 +1,23 @@
 import pygame
 import random
 import math
+import sys
+
+import pygame.image
 
 enemy_num = 10
 enemy_size_min = 1
 enemy_size_max = 5
 screen_width = 1280
 screen_height = 720
+
+pygame.init()
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("Eat Ball Game")
+clock = pygame.time.Clock()
+dt = clock.tick(60) / 1000
+speed = 30 * dt
+font = pygame.font.Font(None, 96)
 
 class Ball(object):
     def __init__(self, x, y, size):
@@ -77,27 +88,49 @@ def draw_screen(player_ball, balls, screen):
     for ball in balls:
         if ball.status:
             ball.draw(screen)
+
+def check_game_end(balls):
+    gameover = True
+    for ball in balls:
+        if ball.status == True:
+            gameover = False
+    return gameover      
+
+def main():
+    enemy_balls = []
+
+    replay_img = pygame.image.load("Replay_Button.png")
+    exit_img = pygame.image.load("Exit_Button.png")
+    game_end = False
     
+    player_ball = create_player_ball()
 
-pygame.init()
-screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("Eat Ball Game")
-clock = pygame.time.Clock()
-running = True
-dt = clock.tick(60) / 1000
-speed = 30 * dt
-enemy_balls = []
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        if game_end == False:
+            create_enemy_ball(enemy_balls)
+            draw_screen(player_ball, enemy_balls, screen)
+            player_move(player_ball, speed)
+            player_eat(player_ball, enemy_balls)
+            game_end = check_game_end(enemy_balls)
+        if game_end:    
+            gameover_text = font.render('Congratulations! You have eat all balls!', True, "red")
+            screen.blit(gameover_text, (0, 160))
+            screen.blit(replay_img, (440, 310))
+            screen.blit(exit_img, (440, 460))
+            mouse_down = pygame.mouse.get_pressed()
+            if mouse_down[0]:
+                pos = pygame.mouse.get_pos()
+                if 440 < pos[0] < 918 and 310 < pos[1] < 410:
+                    main()
+                elif 440 < pos[0] < 918 and 460 < pos[1] < 560:
+                    pygame.quit()
+                    sys.exit()
 
-player_ball = create_player_ball()
-
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-    create_enemy_ball(enemy_balls)
-    draw_screen(player_ball, enemy_balls, screen)
-    pygame.display.flip()
-    player_move(player_ball, speed)
-    player_eat(player_ball, enemy_balls)
+        pygame.display.flip()
     
-pygame.quit()
+if __name__ == "__main__":
+    main()
